@@ -21,11 +21,10 @@ class CouriersOriginRepository:
     def __init__(self) -> None:
         pass
 
-    def list_couriers(self, sort: str, threshold: int, limit: int) -> List[CourierObj]:
-        x = ApiConnect('couriers', sort, limit, threshold)
-        x.client()
+    def list_couriers(self, sort: str, offset: int, limit: int) -> List[CourierObj]:
+        x = ApiConnect('couriers', sort, limit, offset, '2024-08-01')
 
-        return x.client()
+        return x.list_data()
 
 
 class CourierDestRepository:
@@ -53,7 +52,7 @@ class CouriersLoader:
     BATCH_LIMIT = 50  # инкрементальная загрузка рангов.
     SHEMA_TABLE = 'stg.srv_wf_settings'
 
-    def __init__(self, pg_origin: PgConnect, pg_dest: PgConnect, log: Logger) -> None:
+    def __init__(self, pg_dest: PgConnect, log: Logger) -> None:
         self.pg_dest = pg_dest
         self.origin = CouriersOriginRepository()
         self.stg = CourierDestRepository()
@@ -76,7 +75,7 @@ class CouriersLoader:
             # Вычитываем очередную пачку объектов.
 
             last_loaded = wf_setting.workflow_settings[self.LAST_LOADED_ID_KEY]
-            load_queue = self.origin.list_couriers(sort="id", threshold=last_loaded, limit=self.BATCH_LIMIT)
+            load_queue = self.origin.list_couriers(sort="id", offset=last_loaded, limit=self.BATCH_LIMIT)
             self.log.info(f"Found {len(load_queue)} couriers to load.")
 
             if not load_queue:
@@ -86,6 +85,7 @@ class CouriersLoader:
             # Сохраняем объекты в базу dwh.
             for courier in load_queue:
                 self.stg.insert_courier(conn, courier)
+
 
             # Сохраняем прогресс.
             # Мы пользуемся тем же connection, поэтому настройка сохранится вместе с объектами,

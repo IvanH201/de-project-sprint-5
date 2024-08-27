@@ -12,9 +12,9 @@ log = logging.getLogger(__name__)
 
 
 @dag(
-    schedule_interval='0/15 * * * *',  # Задаем расписание выполнения дага - каждый 15 минут.
-    start_date=pendulum.datetime(2024, 8, 20, tz="UTC"),  # Дата начала выполнения дага. Можно поставить сегодня.
-    catchup=False,  # Нужно ли запускать даг за предыдущие периоды (с start_date до сегодня) - False (не нужно).
+    schedule_interval='@daily',  # Задаем расписание выполнения дага - каждый 15 минут.
+    start_date=pendulum.datetime(2024, 7, 20, tz="UTC"),  # Дата начала выполнения дага. Можно поставить сегодня.
+    catchup=True,  # Нужно ли запускать даг за предыдущие периоды (с start_date до сегодня) - True (нужно).
     tags=['project5', 'stg', 'origin', 'api'],  # Теги, используются для фильтрации в интерфейсе Airflow.
     is_paused_upon_creation=True  # Остановлен/запущен при появлении. Сразу запущен.
 )
@@ -29,14 +29,14 @@ def project5_stg_delivery_dag():
     @task(task_id="couriers_load")
     def load_couriers():
         # создаем экземпляр класса, в котором реализована логика.
-        rest_loader = CouriersLoader(origin_pg_connect, dwh_pg_connect, log)
+        rest_loader = CouriersLoader(dwh_pg_connect, log)
         rest_loader.load_couriers()  # Вызываем функцию, которая перельет данные.
 
     # Объявляем таск, который загружает данные.
     @task(task_id="deliveries_load")
     def load_deliveries():
         # создаем экземпляр класса, в котором реализована логика.
-        rest_loader = DeliverysLoader(origin_pg_connect, dwh_pg_connect, log)
+        rest_loader = DeliverysLoader(dwh_pg_connect, log)
         rest_loader.load_deliverys()  # Вызываем функцию, которая перельет данные.
 
     # Инициализируем объявленные таски.

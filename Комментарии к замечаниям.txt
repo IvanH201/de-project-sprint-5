@@ -1,0 +1,10 @@
+1. cdm_load_dag.py - периодичность запуска изменена
+2. deliverys_system_dag.py-
+Скорректирован запуск дага.
+
+3. deliveries_loader.py
+couriers_loader.py
+api_reader.py
+Изменено название метода . Вместо client -> list_data.
+Также убраны не используемые переменные pg_origin.
+Скорректирована загрузка данных
